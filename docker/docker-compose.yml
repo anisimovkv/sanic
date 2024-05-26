@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  mysanic:
+    image: my-sanic-image
+    build: # "context" and "dockerfile" fields have to be under "build"
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - /home/konstantin/Projects/Python/sanic/api/sanic_api:/sanic_api
+    restart: always
+
+  mynginx:
+    image: nginx:1.13.6-alpine
+    ports:
+      - "80:80"
+    depends_on:
+      - mysanic
+    volumes:
+      - ./mysanic.conf:/etc/nginx/conf.d/mysanic.conf
+    restart: always
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  db:
